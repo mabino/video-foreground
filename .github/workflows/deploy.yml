@@ -4,6 +4,9 @@ name: Deploy demo
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - '**/*.md'
+      - '.gitignore'
 
 jobs:
   build-and-deploy:
