@@ -114,8 +114,9 @@ h1 {
 }
 /* Per-scene video filters: allows applying CSS filters to the overlaid canvas per background. */
 /* Example: make the overlaid video on the second scene grayscale. */
-.demo:nth-of-type(2) .alphaCanvas { filter: grayscale(100%); }
+.demo:nth-of-type(1) .alphaCanvas { filter: grayscale(100%); }
 
 /* Demo: additional per-scene filters */
-.demo:nth-of-type(3) .alphaCanvas { filter: sepia(60%) saturate(120%); }
-.demo:nth-of-type(4) .alphaCanvas { filter: contrast(120%) hue-rotate(200deg) brightness(95%); }
+.demo:nth-of-type(2) .alphaCanvas { filter: sepia(60%) saturate(120%); }
+.demo:nth-of-type(3) .alphaCanvas { filter: contrast(120%); }
+/* scene 4: unfiltered */
