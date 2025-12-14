@@ -10,6 +10,7 @@ async function startSegFromUser(){
   if(!netPromise) netPromise = bodyPix.load();
   if(!video){ video = document.createElement('video'); video.autoplay = true; video.playsInline = true; video.muted = true; }
   try{
+    // Request 1280x720 video by default — this is a preferred resolution but not guaranteed
     const stream = await navigator.mediaDevices.getUserMedia({video:{width:1280,height:720}});
     currentStream = stream;
     video.srcObject = stream;
@@ -37,6 +38,7 @@ async function startSegFromUser(){
     vw = video.videoWidth || video.width || 0;
     vh = video.videoHeight || video.height || 0;
   }
+  // Fallback resolution if video dimensions cannot be determined — used as sensible defaults
   if (vw === 0) { vw = 1280; vh = 720; }
   canvases.forEach(c=>{ c.width = vw; c.height = vh; });
   const tmp = document.createElement('canvas'); tmp.width = vw; tmp.height = vh;
