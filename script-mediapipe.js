@@ -1,5 +1,5 @@
 // MediaPipe Selfie Segmentation version
-// Generated: 2025-12-14T20:13:10.581Z
+// Generated: 2025-12-14T20:15:53.123Z
 
 let cameraRunning = false;
 let video = null;
@@ -9,6 +9,12 @@ let selfieSegmentation = null;
 
 const canvases = [];
 const contexts = [];
+
+// Tunable parameters
+let edgeBlur = 3;
+let threshold = 0.5;
+let smoothMask = true;
+let modelSelection = 1;
 
 function initCanvases() {
   const els = document.querySelectorAll('.alphaCanvas');
@@ -38,17 +44,33 @@ function onResults(results) {
   maskCanvas.width = vw;
   maskCanvas.height = vh;
   const maskCtx = maskCanvas.getContext('2d');
+
+  // Apply blur to mask for softer edges if enabled
+  if (smoothMask && edgeBlur > 0) {
+    maskCtx.filter = `blur(${edgeBlur}px)`;
+  }
   maskCtx.drawImage(results.segmentationMask, 0, 0, vw, vh);
+  maskCtx.filter = 'none';
 
   const imgData = tmpCtx.getImageData(0, 0, vw, vh);
   const maskData = maskCtx.getImageData(0, 0, vw, vh);
 
-  // Apply mask: keep person (where mask is light), make background transparent
+  // Apply mask with threshold: keep person (where mask > threshold), make background transparent
+  const thresholdValue = threshold * 255;
   for (let i = 0; i < imgData.data.length; i += 4) {
     // maskData is grayscale; use red channel as alpha indicator
     // MediaPipe mask: person = white (255), background = black (0)
-    const maskAlpha = maskData.data[i]; // 0-255
-    imgData.data[i + 3] = maskAlpha; // set alpha to mask value
+    let maskAlpha = maskData.data[i]; // 0-255
+    // Apply threshold
+    if (maskAlpha < thresholdValue) {
+      maskAlpha = 0;
+    } else if (smoothMask) {
+      // Keep gradient for smooth edges
+      maskAlpha = Math.min(255, (maskAlpha - thresholdValue) / (255 - thresholdValue) * 255);
+    } else {
+      maskAlpha = 255;
+    }
+    imgData.data[i + 3] = maskAlpha;
   }
 
   // Draw to all canvases
@@ -95,7 +117,7 @@ async function startSegFromUser() {
     locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
   });
   selfieSegmentation.setOptions({
-    modelSelection: 1 // 0 = general, 1 = landscape (faster)
+    modelSelection: modelSelection
   });
   selfieSegmentation.onResults(onResults);
 
@@ -168,6 +190,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btn) btn.disabled = true;
     console.error('file:// protocol detected - camera unavailable');
   } else {
-    startMsg.dataset.loadedAt = '2025-12-14T20:13:10.581Z';
+    startMsg.dataset.loadedAt = '2025-12-14T20:15:53.123Z';
+  }
+});
+
+// Wire up UI controls
+document.getElementById('edgeBlur').addEventListener('input', (e) => {
+  edgeBlur = parseInt(e.target.value, 10);
+  document.getElementById('edgeBlurVal').textContent = edgeBlur;
+});
+document.getElementById('threshold').addEventListener('input', (e) => {
+  threshold = parseFloat(e.target.value);
+  document.getElementById('thresholdVal').textContent = threshold.toFixed(2);
+});
+document.getElementById('smoothMask').addEventListener('change', (e) => {
+  smoothMask = e.target.checked;
+});
+document.getElementById('modelSelect').addEventListener('change', (e) => {
+  modelSelection = parseInt(e.target.value, 10);
+  // If running, reinitialize the model with new selection
+  if (selfieSegmentation) {
+    selfieSegmentation.setOptions({ modelSelection: modelSelection });
   }
 });
