@@ -83,11 +83,9 @@ h1 {
 }
 .alphaCanvas {
     position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%,-50%);
-    width: 1280px;
-    height: 720px;
+    inset: 0; /* fill the demo container so canvas touches edges */
+    width: 100%;
+    height: 100%;
     border-radius: 8px;
     outline: 4px solid rgba(255,255,255,0.04);
     background: transparent;
@@ -96,8 +94,8 @@ h1 {
 }
 @media (max-width:720px) {
     .alphaCanvas {
-        width: 90vw;
-        height: 56.25vw;
+        width: 100%;
+        height: 100%;
     }
 }
 .scene01 {
