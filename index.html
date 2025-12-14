@@ -13,6 +13,38 @@
       <span id="startMsg" class="startMsg"></span>
     </div>
     <div class="compareLink">Compare with: <a href="index-mediapipe.html">MediaPipe Selfie Segmentation version</a></div>
+
+    <!-- Segmentation tuning controls -->
+    <div class="controlsPanel">
+      <label>Resolution:
+        <select id="internalRes">
+          <option value="low">Low (faster)</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High (slower)</option>
+          <option value="full">Full</option>
+        </select>
+      </label>
+      <label>Seg. Threshold:
+        <input type="range" id="segThreshold" min="0" max="1" step="0.01" value="0.7">
+        <span id="segThresholdVal">0.70</span>
+      </label>
+      <label>Edge Blur:
+        <input type="range" id="edgeBlur" min="0" max="50" step="1" value="0">
+        <span id="edgeBlurVal">0</span>px
+      </label>
+      <label>Edge Feather:
+        <input type="range" id="edgeFeather" min="0" max="1" step="0.01" value="0">
+        <span id="edgeFeatherVal">0.00</span>
+      </label>
+      <label>Mask Erosion:
+        <input type="range" id="maskErosion" min="0" max="20" step="1" value="0">
+        <span id="maskErosionVal">0</span>px
+      </label>
+      <label>
+        <input type="checkbox" id="invertMask"> Invert mask
+      </label>
+    </div>
+
     <h1>Transparent Video over Multiple Backgrounds</h1>
 
     <div class="demo">
