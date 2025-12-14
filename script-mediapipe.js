@@ -42,18 +42,29 @@ function onResults(results) {
   // Draw the original image
   tmpCtx.drawImage(results.image, 0, 0, vw, vh);
 
-  // Get the segmentation mask (grayscale: 0 = background, 255 = person)
+  // Get the segmentation mask
   const maskCanvas = document.createElement('canvas');
   maskCanvas.width = vw;
   maskCanvas.height = vh;
   const maskCtx = maskCanvas.getContext('2d');
-
-  // Apply blur to mask for softer edges if enabled
-  if (smoothMask && edgeBlur > 0) {
-    maskCtx.filter = `blur(${edgeBlur}px)`;
-  }
+  
+  // Draw mask without filter first
   maskCtx.drawImage(results.segmentationMask, 0, 0, vw, vh);
-  maskCtx.filter = 'none';
+
+  // Apply blur using StackBlur-like box blur approximation for visible effect
+  if (edgeBlur > 0) {
+    // Use CSS filter on a second pass canvas for blur
+    const blurCanvas = document.createElement('canvas');
+    blurCanvas.width = vw;
+    blurCanvas.height = vh;
+    const blurCtx = blurCanvas.getContext('2d');
+    blurCtx.filter = `blur(${edgeBlur}px)`;
+    blurCtx.drawImage(maskCanvas, 0, 0);
+    // Copy blurred result back
+    maskCtx.clearRect(0, 0, vw, vh);
+    maskCtx.filter = 'none';
+    maskCtx.drawImage(blurCanvas, 0, 0);
+  }
 
   // Apply erosion effect (shrink mask) by drawing slightly smaller
   if (maskErosion > 0) {
@@ -73,13 +84,22 @@ function onResults(results) {
   const imgData = tmpCtx.getImageData(0, 0, vw, vh);
   const maskData = maskCtx.getImageData(0, 0, vw, vh);
 
-  // Apply mask with threshold and feathering
-  const thresholdLow = Math.max(0, threshold - edgeFeather / 2) * 255;
-  const thresholdHigh = Math.min(1, threshold + edgeFeather / 2) * 255;
+  // Compute threshold bounds (threshold is center, feather is width of gradient zone)
+  const thresholdLow = Math.max(0, (threshold - edgeFeather / 2)) * 255;
+  const thresholdHigh = Math.min(255, (threshold + edgeFeather / 2) * 255);
   const range = thresholdHigh - thresholdLow;
 
   for (let i = 0; i < imgData.data.length; i += 4) {
-    let maskAlpha = maskData.data[i]; // 0-255
+    // Use alpha channel from mask (MediaPipe outputs to alpha)
+    let maskAlpha = maskData.data[i + 3]; // Try alpha channel
+    // Fallback to red channel if alpha is all 255
+    if (maskAlpha === 255 || maskAlpha === 0) {
+      // Check if red channel has gradient info
+      const redVal = maskData.data[i];
+      if (redVal !== maskAlpha) {
+        maskAlpha = redVal;
+      }
+    }
 
     // Invert if requested
     if (invertMask) {
@@ -87,18 +107,20 @@ function onResults(results) {
     }
 
     // Apply threshold with feathering
-    if (maskAlpha <= thresholdLow) {
-      maskAlpha = 0;
+    let finalAlpha;
+    if (range <= 0 || !smoothMask) {
+      // Hard threshold
+      finalAlpha = maskAlpha >= (threshold * 255) ? 255 : 0;
+    } else if (maskAlpha <= thresholdLow) {
+      finalAlpha = 0;
     } else if (maskAlpha >= thresholdHigh) {
-      maskAlpha = 255;
-    } else if (smoothMask && range > 0) {
-      // Smooth gradient in the feather zone
-      maskAlpha = ((maskAlpha - thresholdLow) / range) * 255;
+      finalAlpha = 255;
     } else {
-      maskAlpha = maskAlpha > (thresholdLow + thresholdHigh) / 2 ? 255 : 0;
+      // Smooth gradient in the feather zone
+      finalAlpha = ((maskAlpha - thresholdLow) / range) * 255;
     }
 
-    imgData.data[i + 3] = maskAlpha;
+    imgData.data[i + 3] = finalAlpha;
   }
 
   // Draw to all canvases
