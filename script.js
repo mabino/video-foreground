@@ -10,7 +10,7 @@ async function startSegFromUser(){
   if(!netPromise) netPromise = bodyPix.load();
   if(!video){ video = document.createElement('video'); video.autoplay = true; video.playsInline = true; video.muted = true; }
   try{
-    const stream = await navigator.mediaDevices.getUserMedia({video:{width:640,height:360}});
+    const stream = await navigator.mediaDevices.getUserMedia({video:{width:1280,height:720}});
     currentStream = stream;
     video.srcObject = stream;
     // wait for some video data so dimensions and frames are available
@@ -37,7 +37,7 @@ async function startSegFromUser(){
     vw = video.videoWidth || video.width || 0;
     vh = video.videoHeight || video.height || 0;
   }
-  if (vw === 0) { vw = 640; vh = 360; }
+  if (vw === 0) { vw = 1280; vh = 720; }
   canvases.forEach(c=>{ c.width = vw; c.height = vh; });
   const tmp = document.createElement('canvas'); tmp.width = vw; tmp.height = vh;
   const tmpCtx = tmp.getContext('2d');
