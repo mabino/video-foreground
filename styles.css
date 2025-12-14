@@ -112,3 +112,6 @@ h1 {
 .scene04 {
     background-image: url('scene01.png');
 }
+/* Per-scene video filters: allows applying CSS filters to the overlaid canvas per background. */
+/* Example: make the overlaid video on the second scene grayscale. */
+.demo:nth-of-type(2) .alphaCanvas { filter: grayscale(100%); }
