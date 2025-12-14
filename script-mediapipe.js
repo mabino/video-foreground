@@ -11,9 +11,12 @@ const canvases = [];
 const contexts = [];
 
 // Tunable parameters
-let edgeBlur = 3;
+let edgeBlur = 5;
 let threshold = 0.5;
+let edgeFeather = 0.3;
+let maskErosion = 0;
 let smoothMask = true;
+let invertMask = false;
 let modelSelection = 1;
 
 function initCanvases() {
@@ -52,24 +55,49 @@ function onResults(results) {
   maskCtx.drawImage(results.segmentationMask, 0, 0, vw, vh);
   maskCtx.filter = 'none';
 
+  // Apply erosion effect (shrink mask) by drawing slightly smaller
+  if (maskErosion > 0) {
+    const erodeCanvas = document.createElement('canvas');
+    erodeCanvas.width = vw;
+    erodeCanvas.height = vh;
+    const erodeCtx = erodeCanvas.getContext('2d');
+    // Draw mask scaled down then back up to erode edges
+    const scale = 1 - (maskErosion / 100);
+    const offsetX = (vw * (1 - scale)) / 2;
+    const offsetY = (vh * (1 - scale)) / 2;
+    erodeCtx.drawImage(maskCanvas, offsetX, offsetY, vw * scale, vh * scale);
+    maskCtx.clearRect(0, 0, vw, vh);
+    maskCtx.drawImage(erodeCanvas, 0, 0, vw, vh);
+  }
+
   const imgData = tmpCtx.getImageData(0, 0, vw, vh);
   const maskData = maskCtx.getImageData(0, 0, vw, vh);
 
-  // Apply mask with threshold: keep person (where mask > threshold), make background transparent
-  const thresholdValue = threshold * 255;
+  // Apply mask with threshold and feathering
+  const thresholdLow = Math.max(0, threshold - edgeFeather / 2) * 255;
+  const thresholdHigh = Math.min(1, threshold + edgeFeather / 2) * 255;
+  const range = thresholdHigh - thresholdLow;
+
   for (let i = 0; i < imgData.data.length; i += 4) {
-    // maskData is grayscale; use red channel as alpha indicator
-    // MediaPipe mask: person = white (255), background = black (0)
     let maskAlpha = maskData.data[i]; // 0-255
-    // Apply threshold
-    if (maskAlpha < thresholdValue) {
-      maskAlpha = 0;
-    } else if (smoothMask) {
-      // Keep gradient for smooth edges
-      maskAlpha = Math.min(255, (maskAlpha - thresholdValue) / (255 - thresholdValue) * 255);
-    } else {
-      maskAlpha = 255;
+
+    // Invert if requested
+    if (invertMask) {
+      maskAlpha = 255 - maskAlpha;
     }
+
+    // Apply threshold with feathering
+    if (maskAlpha <= thresholdLow) {
+      maskAlpha = 0;
+    } else if (maskAlpha >= thresholdHigh) {
+      maskAlpha = 255;
+    } else if (smoothMask && range > 0) {
+      // Smooth gradient in the feather zone
+      maskAlpha = ((maskAlpha - thresholdLow) / range) * 255;
+    } else {
+      maskAlpha = maskAlpha > (thresholdLow + thresholdHigh) / 2 ? 255 : 0;
+    }
+
     imgData.data[i + 3] = maskAlpha;
   }
 
@@ -203,8 +231,19 @@ document.getElementById('threshold').addEventListener('input', (e) => {
   threshold = parseFloat(e.target.value);
   document.getElementById('thresholdVal').textContent = threshold.toFixed(2);
 });
+document.getElementById('edgeFeather').addEventListener('input', (e) => {
+  edgeFeather = parseFloat(e.target.value);
+  document.getElementById('edgeFeatherVal').textContent = edgeFeather.toFixed(2);
+});
+document.getElementById('maskErosion').addEventListener('input', (e) => {
+  maskErosion = parseInt(e.target.value, 10);
+  document.getElementById('maskErosionVal').textContent = maskErosion;
+});
 document.getElementById('smoothMask').addEventListener('change', (e) => {
   smoothMask = e.target.checked;
+});
+document.getElementById('invertMask').addEventListener('change', (e) => {
+  invertMask = e.target.checked;
 });
 document.getElementById('modelSelect').addEventListener('change', (e) => {
   modelSelection = parseInt(e.target.value, 10);
