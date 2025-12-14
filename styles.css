@@ -121,3 +121,32 @@ h1 {
 .sepia-video { filter: sepia(60%) saturate(120%); }
 .highcontrast-video { filter: contrast(120%); }
 /* scene 4: unfiltered (no extra class) */
+
+/* Controls panel for MediaPipe tuning */
+.controlsPanel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+}
+.controlsPanel label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: #cfe8ff;
+}
+.controlsPanel input[type="range"] {
+    width: 100px;
+}
+.controlsPanel select {
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #456;
+    background: #123;
+    color: #fff;
+}
