@@ -4,6 +4,14 @@ let video = null;
 let currentStream = null;
 let renderId = null;
 
+// Tunable parameters
+let internalRes = 'medium';
+let segThreshold = 0.7;
+let edgeBlur = 0;
+let edgeFeather = 0;
+let maskErosion = 0;
+let invertMask = false;
+
 async function startSegFromUser(){
   const startMsg = document.getElementById('startMsg');
   startMsg.textContent = 'Requesting camera...';
@@ -48,11 +56,55 @@ async function startSegFromUser(){
     if(!cameraRunning) return; // abort if stopped while async work was pending
     // draw current video frame to tmp canvas first (ensures segmentation gets proper dimensions)
     tmpCtx.drawImage(video,0,0,tmp.width,tmp.height);
-    const segmentation = await net.segmentPerson(tmp, {internalResolution:'medium', segmentationThreshold:0.7});
+    const segmentation = await net.segmentPerson(tmp, {internalResolution: internalRes, segmentationThreshold: segThreshold});
     if(!cameraRunning) return; // abort if stopped while model was running
     const mask = bodyPix.toMask(segmentation);
+
+    // Get mask as canvas for blur/erosion processing
+    const maskCanvas = document.createElement('canvas');
+    maskCanvas.width = tmp.width;
+    maskCanvas.height = tmp.height;
+    const maskCtx = maskCanvas.getContext('2d');
+    const maskImgData = maskCtx.createImageData(tmp.width, tmp.height);
+    maskImgData.data.set(mask.data);
+    maskCtx.putImageData(maskImgData, 0, 0);
+
+    // Apply blur to mask
+    if (edgeBlur > 0) {
+      const blurCanvas = document.createElement('canvas');
+      blurCanvas.width = tmp.width;
+      blurCanvas.height = tmp.height;
+      const blurCtx = blurCanvas.getContext('2d');
+      blurCtx.filter = `blur(${edgeBlur}px)`;
+      blurCtx.drawImage(maskCanvas, 0, 0);
+      maskCtx.clearRect(0, 0, tmp.width, tmp.height);
+      maskCtx.filter = 'none';
+      maskCtx.drawImage(blurCanvas, 0, 0);
+    }
+
+    // Apply erosion effect
+    if (maskErosion > 0) {
+      const erodeCanvas = document.createElement('canvas');
+      erodeCanvas.width = tmp.width;
+      erodeCanvas.height = tmp.height;
+      const erodeCtx = erodeCanvas.getContext('2d');
+      const scale = 1 - (maskErosion / 100);
+      const offsetX = (tmp.width * (1 - scale)) / 2;
+      const offsetY = (tmp.height * (1 - scale)) / 2;
+      erodeCtx.drawImage(maskCanvas, offsetX, offsetY, tmp.width * scale, tmp.height * scale);
+      maskCtx.clearRect(0, 0, tmp.width, tmp.height);
+      maskCtx.drawImage(erodeCanvas, 0, 0, tmp.width, tmp.height);
+    }
+
+    const processedMask = maskCtx.getImageData(0, 0, tmp.width, tmp.height);
     const img = tmpCtx.getImageData(0,0,tmp.width,tmp.height);
-    const mdata = mask.data;
+    const mdata = processedMask.data;
+
+    // Compute feather thresholds
+    const thresholdLow = Math.max(0, 0.5 - edgeFeather / 2) * 255;
+    const thresholdHigh = Math.min(255, (0.5 + edgeFeather / 2) * 255);
+    const range = thresholdHigh - thresholdLow;
+
     for(const c of canvases){
       const ctx = c.getContext('2d');
       const out = ctx.createImageData(tmp.width,tmp.height);
@@ -60,8 +112,26 @@ async function startSegFromUser(){
         out.data[i]=img.data[i];
         out.data[i+1]=img.data[i+1];
         out.data[i+2]=img.data[i+2];
-        // invert mask alpha so person is opaque and background is transparent
-        out.data[i+3]=255 - mdata[i+3];
+        // Get mask alpha (invert so person is opaque)
+        let maskAlpha = 255 - mdata[i+3];
+
+        // Invert if requested
+        if (invertMask) {
+          maskAlpha = 255 - maskAlpha;
+        }
+
+        // Apply feathering
+        if (edgeFeather > 0 && range > 0) {
+          if (maskAlpha <= thresholdLow) {
+            maskAlpha = 0;
+          } else if (maskAlpha >= thresholdHigh) {
+            maskAlpha = 255;
+          } else {
+            maskAlpha = ((maskAlpha - thresholdLow) / range) * 255;
+          }
+        }
+
+        out.data[i+3] = maskAlpha;
       }
       ctx.putImageData(out,0,0);
     }
@@ -105,6 +175,30 @@ document.addEventListener('DOMContentLoaded', ()=>{
     console.error('file:// protocol detected - camera unavailable');
   } else {
     // For debugging, annotate load time
-    startMsg.dataset.loadedAt = '2025-12-14T17:50:28.141Z';
+    startMsg.dataset.loadedAt = '2025-12-14T20:27:54.161Z';
   }
+});
+
+// Wire up UI controls
+document.getElementById('internalRes').addEventListener('change', (e) => {
+  internalRes = e.target.value;
+});
+document.getElementById('segThreshold').addEventListener('input', (e) => {
+  segThreshold = parseFloat(e.target.value);
+  document.getElementById('segThresholdVal').textContent = segThreshold.toFixed(2);
+});
+document.getElementById('edgeBlur').addEventListener('input', (e) => {
+  edgeBlur = parseInt(e.target.value, 10);
+  document.getElementById('edgeBlurVal').textContent = edgeBlur;
+});
+document.getElementById('edgeFeather').addEventListener('input', (e) => {
+  edgeFeather = parseFloat(e.target.value);
+  document.getElementById('edgeFeatherVal').textContent = edgeFeather.toFixed(2);
+});
+document.getElementById('maskErosion').addEventListener('input', (e) => {
+  maskErosion = parseInt(e.target.value, 10);
+  document.getElementById('maskErosionVal').textContent = maskErosion;
+});
+document.getElementById('invertMask').addEventListener('change', (e) => {
+  invertMask = e.target.checked;
 });
