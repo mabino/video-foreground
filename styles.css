@@ -115,10 +115,8 @@ h1 {
 }
 /* Per-scene video filters: allows applying CSS filters to the overlaid canvas per background. */
 /* Example: make the overlaid video on the second scene grayscale. */
-/* Per-scene filters selected via the billboard's scene class to avoid nth-of-type fragility */
-.demo .billboard.scene01 + .alphaCanvas { filter: grayscale(100%); }
-
-/* Demo: additional per-scene filters */
-.demo .billboard.scene02 + .alphaCanvas { filter: sepia(60%) saturate(120%); }
-.demo .billboard.scene03 + .alphaCanvas { filter: contrast(120%); }
-/* scene 4: unfiltered */
+/* Semantic per-canvas classes for filters */
+.bw-video { filter: grayscale(100%); }
+.sepia-video { filter: sepia(60%) saturate(120%); }
+.highcontrast-video { filter: contrast(120%); }
+/* scene 4: unfiltered (no extra class) */
