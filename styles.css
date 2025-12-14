@@ -150,3 +150,20 @@ h1 {
     background: #123;
     color: #fff;
 }
+
+/* Cross-link styling */
+.compareLink {
+    font-size: 14px;
+    margin-bottom: 12px;
+    color: #9cf;
+}
+/* Make links readable on dark background */
+a {
+    color: #6cf;
+}
+a:visited {
+    color: #b9f;
+}
+a:hover {
+    color: #fff;
+}
