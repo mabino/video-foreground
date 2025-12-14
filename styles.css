@@ -1,0 +1,21 @@
+/* styles.css - extracted from index.html
+   Generated: 2025-12-13T22:51:28.829Z */
+:root{--bg:#071225}
+html,body{height:100%;margin:0;background:var(--bg);font-family:Inter,Segoe UI,Arial,sans-serif;color:#fff}
+.container{max-width:1100px;margin:28px auto;padding:18px}
+h1{margin:0 0 8px 0;font-size:20px}
+.demo{position:relative;overflow:hidden;border-radius:12px;box-shadow:0 12px 30px rgba(2,8,23,.6);height:420px;margin-bottom:36px}
+.billboard{position:absolute;inset:0;background-size:cover;background-position:center center;z-index:0;background-color:#123a4a}
+.alphaVideo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:1280px;height:720px;border-radius:8px;outline:4px solid rgba(255,255,255,0.04);background:transparent;pointer-events:auto;z-index:2}
+@media (max-width:720px){.alphaVideo{width:90vw;height:56.25vw}}
+.legend{color:#cfe8ff;font-size:13px;padding:8px 0}
+.startControlsTop{display:flex;gap:12px;align-items:center;justify-content:center;margin-bottom:16px}
+.startBtn{font-size:18px;padding:12px 18px}
+.startMsg{margin-left:12px;color:#ffd;font-weight:600}
+.startNote{margin-top:8px;font-size:13px;color:#cfe8ff}
+.alphaCanvas{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:1280px;height:720px;border-radius:8px;outline:4px solid rgba(255,255,255,0.04);background:transparent;pointer-events:auto;z-index:2}
+@media (max-width:720px){.alphaCanvas{width:90vw;height:56.25vw}}
+.scene01{background-image:url('scene01.jpg')}
+.scene02{background-image:url('scene02.jpg')}
+.scene03{background-image:url('scene03.jpg')}
+.scene04{background-image:url('scene04.jpg')}

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Transparent Video over Multiple Backgrounds Demo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <div id="startControlsTop" class="startControlsTop">
+      <button id="startBtn" class="btn startBtn">Start camera</button>
+      <span id="startMsg" class="startMsg"></span>
+    </div>
+    <h1>Transparent Video over Multiple Backgrounds</h1>
+
+    <div class="demo">
+      <div class="billboard scene01"></div>
+      <!-- Fallback intrinsic canvas size (used if video dimensions aren't available) -->
+      <canvas class="alphaCanvas" width="1280" height="720"></canvas>
+    </div>
+
+    <div class="demo">
+      <div class="billboard scene02"></div>
+      <!-- Fallback intrinsic canvas size (used if video dimensions aren't available) -->
+      <canvas class="alphaCanvas" width="1280" height="720"></canvas>
+    </div>
+
+    <div class="demo">
+      <div class="billboard scene03"></div>
+      <!-- Fallback intrinsic canvas size (used if video dimensions aren't available) -->
+      <canvas class="alphaCanvas" width="1280" height="720"></canvas>
+    </div>
+
+    <div class="demo">
+      <div class="billboard scene04"></div>
+      <!-- Fallback intrinsic canvas size (used if video dimensions aren't available) -->
+      <canvas class="alphaCanvas" width="1280" height="720"></canvas>
+    </div>
+
+    <div class="legend" id="startArea">
+      <div class="startNote">Note: Camera access requires a secure context (https or localhost). If you opened this file via file://, run: <code>python3 -m http.server</code> and open http://localhost:8000/ in your browser.</div>
+    </div>
+  </div>
+
+  <!-- External dependencies commented out; see README.md for installing locally and including vendor copies. -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.0.5/dist/body-pix.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
