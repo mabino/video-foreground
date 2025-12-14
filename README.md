@@ -38,16 +38,17 @@ Sample per-scene filters
 ------------------------
 This project demonstrates how to apply CSS filters to the overlaid video on a per-background basis using simple selectors. The demo uses the following filters (see styles.css):
 
-- scene01: unchanged (no filter)
-- scene02: grayscale(100%) — black & white effect
-- scene03: sepia(60%) saturate(120%) — warm vintage tone with increased saturation
-- scene04: contrast(120%) hue-rotate(200deg) brightness(95%) — boosted contrast with a hue shift and slight dimming
+- scene01: grayscale(100%) — black & white effect
+- scene02: sepia(60%) saturate(120%) — warm vintage tone with increased saturation
+- scene03: contrast(120%) — stronger contrast
+- scene04: unchanged (no filter)
 
 Example CSS (from styles.css):
 
-.demo:nth-of-type(2) .alphaCanvas { filter: grayscale(100%); }
-.demo:nth-of-type(3) .alphaCanvas { filter: sepia(60%) saturate(120%); }
-.demo:nth-of-type(4) .alphaCanvas { filter: contrast(120%) hue-rotate(200deg) brightness(95%); }
+.demo:nth-of-type(1) .alphaCanvas { filter: grayscale(100%); }
+.demo:nth-of-type(2) .alphaCanvas { filter: sepia(60%) saturate(120%); }
+.demo:nth-of-type(3) .alphaCanvas { filter: contrast(120%); }
+/* scene 4: no filter */
 
 These filters are purely cosmetic and applied via CSS to the canvas element that contains the processed video. Modify or add additional CSS filters to experiment with other looks.
 
