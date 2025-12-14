@@ -1,0 +1,61 @@
+# Deploy demo to GitHub Pages
+# Generated: 2025-12-14T18:19:28.615Z
+name: Deploy demo
+on:
+  push:
+    branches: [ master, main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Try install dependencies
+        id: deps
+        run: |
+          set -e
+          if npm ci; then
+            echo "installed=true" >> $GITHUB_OUTPUT
+          else
+            echo "installed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Copy vendor if installed
+        if: steps.deps.outputs.installed == 'true'
+        run: |
+          mkdir -p vendor
+          cp node_modules/@tensorflow/tfjs/dist/tf.min.js vendor/
+          cp node_modules/@tensorflow-models/body-pix/dist/body-pix.min.js vendor/
+
+      - name: Prepare site directory
+        run: |
+          rm -rf site
+          mkdir -p site
+          rsync -a --exclude='.git' --exclude='node_modules' --exclude='site' ./ site/
+
+      - name: Use local vendor files in site (when installed)
+        if: steps.deps.outputs.installed == 'true'
+        run: |
+          # Replace the commented CDN block with local vendor includes
+          sed -i -E "s|<!--\s*<script src=\"https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@[^"]+\"></script>\n\s*<script src=\"https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@[^"]+\"></script>\s*-->|<script src=\"vendor/tf.min.js\"></script>\n<script src=\"vendor/body-pix.min.js\"></script>|" site/index.html
+
+      - name: Use CDN includes in site (when install failed)
+        if: steps.deps.outputs.installed == 'false'
+        run: |
+          # Uncomment the commented CDN block so site will use jsdelivr CDN
+          sed -i -E 's/<!--\s*<script/<script/' site/index.html
+          sed -i -E 's/<\/script>\s*-->/<\/script>/' site/index.html
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
