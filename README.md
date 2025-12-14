@@ -88,7 +88,7 @@ Committing and pushing
 This repo has been updated locally to comment out CDN script tags and includes this README. Commit and push to your remote (ssh key required):
 
    git remote add origin git@github.com:mabino/video-foreground.git
-   git push -u origin master
+   git push -u origin main
 
 If GitHub push from this environment fails (no network or no ssh key), push from your machine where you have access.
 
